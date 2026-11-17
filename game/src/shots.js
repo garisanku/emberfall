@@ -13,8 +13,23 @@ export function applyShot(game, scene, seed) {
   game.rng = rng;
   game.time = 0;
   if (scene === 'title') {
+    // Hero cover: the ember burns at full strength, ringed by lit braziers
+    // of all three kinds, embers drifting up. The whole cover reads as a
+    // warm light holding back the dark, not a black screen with text.
     game.screen = 'title';
     game.time = 1.4;
+    game.emberHealth = EMBER.maxHealth;
+    game.emberLight = EMBER.lightRadiusMax;
+    const kinds = ['spark', 'flame', 'frost'];
+    const picks = [0, 1, 3, 4, 6, 8, 10, 12];
+    for (let i = 0; i < picks.length; i++) {
+      const t = makeTower(kinds[i % 3], game.plots[picks[i]]);
+      if (i % 3 === 0) t.level = 2;
+      t.cooldown = 0.2;
+      game.towers.push(t);
+    }
+    for (let i = 0; i < 24; i++) game.particles.emberDrift(EMBER.x, EMBER.y);
+    game.particles.update(0.5);
     return;
   }
   if (scene === 'play') {
@@ -24,12 +39,12 @@ export function applyShot(game, scene, seed) {
     game.score = 1840;
     game.embers = 210;
     game.emberHealth = 74;
-    game.emberLight = 170;
+    game.emberLight = 220;
     game.kills = 96;
     game.time = 24.5;
     const kinds = ['spark', 'flame', 'frost'];
     const plots = game.plots;
-    const picks = [0, 2, 5, 7, 9, 12, 15, 18, 21];
+    const picks = [0, 2, 5, 7, 9, 12, 15, 18, 21, 3, 11, 19];
     for (let i = 0; i < picks.length; i++) {
       const t = makeTower(kinds[i % 3], plots[picks[i]]);
       if (i % 4 === 0) t.level = 2;
@@ -42,6 +57,8 @@ export function applyShot(game, scene, seed) {
       { kind: 'brute', x: 90, y: 420 }, { kind: 'wraith', x: 1150, y: 330 },
       { kind: 'wisp', x: 620, y: 90 }, { kind: 'shade', x: 300, y: 640 },
       { kind: 'wisp', x: 980, y: 640 }, { kind: 'shade', x: 660, y: 640 },
+      { kind: 'shade', x: 480, y: 120 }, { kind: 'wisp', x: 840, y: 140 },
+      { kind: 'brute', x: 1200, y: 480 }, { kind: 'shade', x: 160, y: 560 },
     ];
     for (const s of spots) {
       const e = makeEnemy(s.kind, 6, rng);
@@ -50,7 +67,8 @@ export function applyShot(game, scene, seed) {
       e.inLight = false;
       game.enemies.push(e);
     }
-    game.banner = { text: 'WAVE 6', sub: '', until: 9999 };
+    // No wave banner: it covered the ember. The HUD already shows WAVE 6/12.
+    game.banner = null;
     return;
   }
   if (scene === 'victory') {
